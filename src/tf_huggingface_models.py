@@ -2,7 +2,7 @@ import numpy as np
 from tensorflow.keras import Model
 import tensorflow as tf
 from transformers import TFBertForSequenceClassification, BertTokenizer, glue_convert_examples_to_features
-import utils as utils
+from . import utils as utils
 
 
 class TimeDitributedBert(tf.keras.layers.Wrapper):

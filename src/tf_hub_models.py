@@ -3,7 +3,7 @@ from tensorflow.keras import Model
 import tensorflow as tf
 import tensorflow_hub as hub
 from bert.tokenization.bert_tokenization import FullTokenizer
-import utils
+from . import utils
 
 
 class TimeDitributedBert(tf.keras.layers.Wrapper):
