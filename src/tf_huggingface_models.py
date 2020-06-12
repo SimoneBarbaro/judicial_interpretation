@@ -2,7 +2,7 @@ import numpy as np
 from tensorflow.keras import Model
 import tensorflow as tf
 from transformers import TFBertForSequenceClassification, BertTokenizer, glue_convert_examples_to_features
-from . import utils as utils
+from . import utils
 
 
 class TimeDitributedBert(tf.keras.layers.Wrapper):
@@ -63,7 +63,7 @@ class HuggingFaceBert(Model):
         if val_data is not None:
             val_dataset = self.get_dataset(val_data)
             validation_steps = len(val_data["opinion"]) // batch_size
-        return self.fit(dataset.shuffle(utils.RANDOM_STATE).batch(batch_size).repeat(-1),
+        return self.fit(dataset.shuffle(utils.RANDOM_SEED).batch(batch_size).repeat(-1),
                         epochs=epochs, steps_per_epoch=steps_per_epoch,
                         class_weight=utils.get_class_weights(training_data["opinion"]),
                         validation_data=val_dataset, validation_steps=validation_steps)

@@ -9,7 +9,8 @@ OUTCOME_DICT = {
     5: 0,
     9: 0,
 }
-RANDOM_STATE = np.random.RandomState(0)
+RANDOM_SEED = 0
+RANDOM_STATE = np.random.RandomState(RANDOM_SEED)
 TRAIN_SPLIT = 0.7
 TEST_SPLIT = 0.33
 INTERPRETATION_VAL_SPLIT = 0.5
