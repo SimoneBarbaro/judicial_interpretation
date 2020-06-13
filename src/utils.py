@@ -9,7 +9,7 @@ OUTCOME_DICT = {
     5: 0,
     9: 0,
 }
-RANDOM_SEED = 0
+RANDOM_SEED = 11
 RANDOM_STATE = np.random.RandomState(RANDOM_SEED)
 TRAIN_SPLIT = 0.7
 TEST_SPLIT = 0.33
@@ -19,6 +19,6 @@ MAX_SEQ_LENGTH = BERT_SEQ_LENGTH * 73
 
 
 def get_class_weights(labels):
-    return class_weight.compute_class_weight('balanced',
-                                             np.unique(labels),
-                                             labels)
+    return dict(enumerate(class_weight.compute_class_weight('balanced',
+                                                            np.unique(labels),
+                                                            labels)))
