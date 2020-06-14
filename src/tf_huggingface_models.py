@@ -36,6 +36,8 @@ class HuggingFaceBert(Model):
         super().__init__(*args, **kwargs)
         self.bert_layer = TFBertForSequenceClassification.from_pretrained('bert-base-cased')
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
+        self.cashed_train_dataset = None
+        self.cashed_val_dataset = None
 
     def call(self, inputs, training=None, mask=None):
         return self.bert_layer.call(inputs, training=None)
@@ -52,21 +54,29 @@ class HuggingFaceBert(Model):
                         metrics=[tf.keras.metrics.SparseCategoricalAccuracy('accuracy')])
 
     def get_dataset(self, data, max_length=utils.BERT_SEQ_LENGTH):
-        return glue_convert_examples_to_features(data_to_tf_dataset(data), self.tokenizer, max_length=max_length,
+        return glue_convert_examples_to_features(data_to_tf_dataset(data),
+                                                 self.tokenizer,
+                                                 max_length=max_length,
                                                  task='cola')
 
-    def train(self, training_data, epochs, batch_size, val_data=None):
+    def reset_cache(self):
+        self.cashed_train_dataset = None
+        self.cashed_val_dataset = None
+
+    def train(self, training_data, epochs, batch_size, val_data=None, use_cache=True):
         steps_per_epoch = len(training_data["opinion"]) // batch_size
-        dataset = self.get_dataset(training_data)
-        val_dataset = None
+        if not use_cache or self.cashed_train_dataset is None:
+            self.cashed_train_dataset = self.get_dataset(training_data)
         validation_steps = None
-        if val_data is not None:
-            val_dataset = self.get_dataset(val_data)
+        if val_data is not None and (not use_cache or self.cashed_val_dataset is None):
+            self.cashed_val_dataset = self.get_dataset(val_data)
             validation_steps = len(val_data["opinion"]) // batch_size
-        return self.fit(dataset.shuffle(utils.RANDOM_SEED).batch(batch_size).repeat(-1),
+        return self.fit(self.cashed_train_dataset.shuffle(utils.RANDOM_SEED).batch(batch_size).repeat(-1),
                         epochs=epochs, steps_per_epoch=steps_per_epoch,
                         class_weight=utils.get_class_weights(training_data["opinion"]),
-                        validation_data=val_dataset, validation_steps=validation_steps)
+                        validation_data=self.cashed_val_dataset.shuffle(utils.RANDOM_SEED).batch(batch_size),
+                        #validation_steps=validation_steps
+                        )
 
     def get_predictor(self):
         def bert_predict(text):
