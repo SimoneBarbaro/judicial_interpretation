@@ -22,3 +22,14 @@ def get_class_weights(labels):
     return dict(enumerate(class_weight.compute_class_weight('balanced',
                                                             np.unique(labels),
                                                             labels)))
+
+def data_to_tf_dataset(data):
+    def gen():
+        for i, row in data.iterrows():
+            yield {"idx": i, "label": row["outcome"], "sentence": row["opinion"]}
+
+    return tf.data.Dataset.from_generator(gen, ({"idx": tf.int64, "label": tf.int32, "sentence": tf.string}))
+
+
+def get_tokenized_data(data, tokenizer, lenght):
+    return glue_convert_examples_to_features(data_to_tf_dataset(data), tokenizer, max_length=72 * lenght, task='cola')
