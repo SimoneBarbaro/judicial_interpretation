@@ -49,8 +49,8 @@ def search_model():
 
     train_features = np.load("train_features.npy")
     valid_features = np.load("valid_features.npy")
-    train_y = data_train["output"].values
-    valid_y = data_val_model["output"].values
+    train_y = data_train["outcome"].values
+    valid_y = data_val_model["outcome"].values
     tuner = RandomSearch(
         get_hp_model,
         objective='val_accuracy',
