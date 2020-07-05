@@ -7,7 +7,7 @@ from . import utils
 
 
 def get_model(num_layers, num_dense_layers, type_layer, cell_size, learning_rate, dropout_rate):
-    features_inp = tf.keras.layers.Input((72, 768))
+    features_inp = tf.keras.layers.Input((utils.SEQ_EXTENTION, 768))
     x = features_inp
     x = tf.keras.layers.Dropout(dropout_rate)(x)
     for i in range(num_layers):

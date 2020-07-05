@@ -7,9 +7,9 @@ from .data_load import get_data, get_train_val_test_splits
 
 
 def extend_data(inputs, y):
-    x = {"input_ids": tf.reshape(inputs["input_ids"], shape=(72, 1, utils.BERT_SEQ_LENGTH)),
-         "attention_mask": tf.reshape(inputs["attention_mask"], shape=(72, 1, utils.BERT_SEQ_LENGTH)),
-         "token_type_ids": tf.reshape(inputs["token_type_ids"], shape=(72, 1, utils.BERT_SEQ_LENGTH))}
+    x = {"input_ids": tf.reshape(inputs["input_ids"], shape=(utils.SEQ_EXTENTION, 1, utils.BERT_SEQ_LENGTH)),
+         "attention_mask": tf.reshape(inputs["attention_mask"], shape=(utils.SEQ_EXTENTION, 1, utils.BERT_SEQ_LENGTH)),
+         "token_type_ids": tf.reshape(inputs["token_type_ids"], shape=(utils.SEQ_EXTENTION, 1, utils.BERT_SEQ_LENGTH))}
     return tf.data.Dataset.zip((tf.data.Dataset.from_tensor_slices(x), tf.data.Dataset.from_tensor_slices(tf.repeat(y, 72))))
 
 
@@ -18,7 +18,7 @@ def make_features(data, bert, file_name):
     features = []
     j = 0
     for d in supersplit_data.as_numpy_iterator():
-        if j % 72 == 0:
+        if j % utils.SEQ_EXTENTION == 0:
             if j > 0:
                 f = np.expand_dims(np.concatenate(f, axis=0), axis=0)
                 features.append(f)
