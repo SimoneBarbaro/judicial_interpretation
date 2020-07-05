@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from transformers import BertTokenizer, glue_convert_examples_to_features, TFBertModel
+from transformers import BertTokenizer, TFBertModel
 
 from . import utils
 from .data_load import get_data, get_train_val_test_splits
