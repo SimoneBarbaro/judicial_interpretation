@@ -10,7 +10,7 @@ def extend_data(inputs, y):
     x = {"input_ids": tf.reshape(inputs["input_ids"], shape=(utils.SEQ_EXTENTION, 1, utils.BERT_SEQ_LENGTH)),
          "attention_mask": tf.reshape(inputs["attention_mask"], shape=(utils.SEQ_EXTENTION, 1, utils.BERT_SEQ_LENGTH)),
          "token_type_ids": tf.reshape(inputs["token_type_ids"], shape=(utils.SEQ_EXTENTION, 1, utils.BERT_SEQ_LENGTH))}
-    return tf.data.Dataset.zip((tf.data.Dataset.from_tensor_slices(x), tf.data.Dataset.from_tensor_slices(tf.repeat(y, 72))))
+    return tf.data.Dataset.zip((tf.data.Dataset.from_tensor_slices(x), tf.data.Dataset.from_tensor_slices(tf.repeat(y, utils.SEQ_EXTENTION))))
 
 
 def make_features(data, bert, file_name):

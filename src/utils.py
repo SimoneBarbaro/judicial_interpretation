@@ -35,4 +35,4 @@ def data_to_tf_dataset(data):
 
 
 def get_tokenized_data(data, tokenizer, lenght):
-    return glue_convert_examples_to_features(data_to_tf_dataset(data), tokenizer, max_length=72 * lenght, task='cola')
+    return glue_convert_examples_to_features(data_to_tf_dataset(data), tokenizer, max_length=SEQ_EXTENTION * lenght, task='cola')
