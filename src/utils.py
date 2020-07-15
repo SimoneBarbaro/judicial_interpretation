@@ -26,6 +26,15 @@ def get_class_weights(labels):
                                                             np.unique(labels),
                                                             labels)))
 
+
+def texts_to_tf_dataset(texts):
+    def gen():
+        for i, text in enumerate(texts):
+            yield {"idx": i, "label": 0, "sentence": text}
+
+    return tf.data.Dataset.from_generator(gen, ({"idx": tf.int64, "label": tf.int32, "sentence": tf.string}))
+
+
 def data_to_tf_dataset(data):
     def gen():
         for i, row in data.iterrows():

@@ -13,7 +13,7 @@ def extend_data(inputs, y):
     return tf.data.Dataset.zip((tf.data.Dataset.from_tensor_slices(x), tf.data.Dataset.from_tensor_slices(tf.repeat(y, utils.SEQ_EXTENTION))))
 
 
-def make_features(data, bert, file_name):
+def make_features(data, bert):
     supersplit_data = data.flat_map(extend_data)
     features = []
     j = 0
@@ -30,7 +30,6 @@ def make_features(data, bert, file_name):
     features.append(f)
 
     features = np.concatenate(features, axis=0)
-    np.save(file_name, features)
     return features
 
 
@@ -43,5 +42,6 @@ def build_features():
                                                                max_length=utils.MAX_SEQ_LENGTH, task='cola')
     original_valid_dataset = glue_convert_examples_to_features(utils.data_to_tf_dataset(data_val_model), tokenizer,
                                                                max_length=utils.MAX_SEQ_LENGTH, task='cola')
-    return make_features(original_train_dataset, bert, "train_features.npy"), make_features(original_valid_dataset, bert, "valid_features.npy")
-
+    f_train, f_val = make_features(original_train_dataset, bert), make_features(original_valid_dataset, bert)
+    np.save("train_features.npy", f_train)
+    np.save("valid_features.npy", f_val)
