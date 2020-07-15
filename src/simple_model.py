@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import RandomizedSearchCV
 from xgboost import XGBClassifier
 
-from src import utils
+from . import utils
 
 nlp = spacy.load('en_core_web_sm')
 bad_words = ["affirmed", "affirm", "reversed", "reverse"]
