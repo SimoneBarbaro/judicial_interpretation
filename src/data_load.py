@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from . import utils
+import utils
 
 
 def get_data():
-    data = pd.read_csv("sc_opinions_meta_00_11_case_level.csv", sep="|").drop(columns="Unnamed: 0")
+    data = pd.read_csv("../data/sc_opinions_meta_00_11_case_level.csv", sep="|").drop(columns="Unnamed: 0")
     data["outcome"] = data["caseDisposition"].apply(lambda x: utils.OUTCOME_DICT.get(x, np.nan))
     return data[["opinion", "outcome"]].dropna()
 

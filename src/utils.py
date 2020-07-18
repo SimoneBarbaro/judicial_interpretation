@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from transformers import glue_convert_examples_to_features
+#from transformers import glue_convert_examples_to_features
 from sklearn.utils import class_weight
 
 OUTCOME_DICT = {
@@ -42,6 +42,7 @@ def data_to_tf_dataset(data):
 
     return tf.data.Dataset.from_generator(gen, ({"idx": tf.int64, "label": tf.int32, "sentence": tf.string}))
 
-
+"""
 def get_tokenized_data(data, tokenizer, lenght):
     return glue_convert_examples_to_features(data_to_tf_dataset(data), tokenizer, max_length=SEQ_EXTENTION * lenght, task='cola')
+"""

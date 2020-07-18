@@ -1,15 +1,16 @@
 from string import punctuation
 import nltk
+import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 from nltk import ngrams
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
+from sklearn.model_selection import GridSearchCV, PredefinedSplit
+from sklearn.metrics import f1_score, make_scorer
 from xgboost import XGBClassifier
 
-from . import utils
 
 nlp = spacy.load('en_core_web_sm')
 bad_words = ["affirmed", "affirm", "reversed", "reverse"]
@@ -35,13 +36,14 @@ def get_ngrams(corpus, max_len, tokenizer_fn=tokenize_text):
     grams = []
     for i, d in enumerate(corpus):
         tokens = tokenizer_fn(d)
-        grams.append(tokens)
-        for n in range(2, max_len):
-            grams[i] += list(ngrams(tokens, n))
+        grams.append([t for t in tokens])
+        for n in range(2, max_len + 1):
+            grams[i] += ["_".join(gram) for gram in ngrams(tokens, n)]
+    return grams
 
 
 class SimpleModel:
-    def __init__(self):
+    def __init__(self, train_dataset, val_dataset):
         tfidf = TfidfVectorizer(min_df=0.01,
                                 max_df=0.9,
                                 max_features=10000,
@@ -55,19 +57,45 @@ class SimpleModel:
             ("model", XGBClassifier())
         ])
         self.search_parameters = {
-            "Vectorizer__min_df": [0, 0.01, 0.05, 0.1],
-            "Vectorizer__max_df": [0.9, 0.95, 0.99, 1],
-            "Vectorizer__max_features": [1000, 2000, 5000, 10000],
-            "Vectorizer__ngram_range": [(1, 1), (1, 2), (1, 3), (1, 4)]
+            "Vectorizer__min_df": [0, 0.05, 0.1],
+            "Vectorizer__max_df": [0.9, 0.95, 1],
+            "Vectorizer__max_features": [1000, 5000, 10000],
+            "Vectorizer__ngram_range": [(1, 2), (1, 3), (1, 4)]
         }
-        self.search = GridSearchCV(self.model, self.search_parameters, n_jobs=-1)
+        self.train_X = train_dataset["opinion"]
+        self.train_y = train_dataset["outcome"]
+        self.val_X = val_dataset["opinion"]
+        self.val_y = val_dataset["outcome"]
+        split = PredefinedSplit(np.concatenate((np.repeat(-1, len(self.train_y)), np.repeat(0, len(self.val_y)))))
+        self.search = GridSearchCV(self.model, self.search_parameters, cv=split, scoring="f1_micro")
 
-    def fit(self, dataset):
-        self.search.fit(dataset["opinion"], dataset["outcome"])
+    def fit(self):
+        X = np.concatenate((self.train_X, self.val_X))
+        y = np.concatenate((self.train_y, self.val_y))
+        self.search.fit(X, y)
+        self.model = self.search.best_estimator_
         return self.search.cv_results_
 
     def evaluate(self, dataset):
-        self.search.score(dataset["opinion"], dataset["outcome"])
+        return self.model.score(dataset["opinion"], dataset["outcome"])
+
+    def load(self, result_dataset):
+        params = result_dataset.sort_values("rank_test_score")
+        params["param_Vectorizer__ngram_range"] = params["param_Vectorizer__ngram_range"]\
+            .apply(lambda s: s.replace("(", "").replace(")", "").split(", "))\
+            .apply(lambda q: (int(q[0]), int(q[1])))
+        tfidf = TfidfVectorizer(min_df=params["param_Vectorizer__min_df"].values[0],
+                                max_df=params["param_Vectorizer__max_df"].values[0],
+                                max_features=params["param_Vectorizer__max_features"].values[0],
+                                # stop_words='english',
+                                use_idf=True,
+                                ngram_range=params["param_Vectorizer__ngram_range"].values[0],
+                                tokenizer=tokenize_text)
+        self.model = Pipeline([
+            ("Vectorizer", tfidf),
+            ("model", XGBClassifier())
+        ])
+        self.model.fit(self.train_X, self.train_y)
 
     def predict(self, documents):
-        return self.search.predict_proba(documents)
+        return self.model.predict_proba(documents)
