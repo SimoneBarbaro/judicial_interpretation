@@ -12,20 +12,18 @@ data = get_data()
 data_train, data_val_model, data_val_interpretation, data_test = get_train_val_test_splits(data)
 data_val = pd.concat([data_val_model, data_val_interpretation])
 model = SimpleModel(data_train, data_val_model)
-if not os.path.exists("../data/simple_model_fit2.csv"):
+if not os.path.exists("../data/simple_model_fit.csv"):
     fit = model.fit()
-    pd.DataFrame(fit).to_csv("../data/simple_model_fit2.csv", index=False, header=True)
-fit = pd.read_csv("../data/simple_model_fit2.csv")
+    pd.DataFrame(fit).to_csv("../data/simple_model_fit.csv", index=False, header=True)
+fit = pd.read_csv("../data/simple_model_fit.csv")
 model.load(fit)
 print(pd.DataFrame(fit))
 print(model.evaluate(data_val_model))
 
-exit(0)
-
 explainer = LimeExplainer()
 if not os.path.exists("../data/lime_data.csv"):
     lime_dataset = explainer.build_explanations(model.predict, data_val_interpretation)
-    lime_dataset.to_csv("lime_data.csv", header=True, index=False)
+    lime_dataset.to_csv("../data/lime_data.csv", header=True, index=False)
 lime_dataset = pd.read_csv("../data/lime_data.csv")
 explainer.load(lime_dataset)
 print(explainer.get_word_importances())
