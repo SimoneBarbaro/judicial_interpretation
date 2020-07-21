@@ -32,11 +32,11 @@ else:
     lime_explainer.load(lime_dataset)
 lda_explainer = LdaExplainer(ngrams=model.get_model_max_ngrams(), dictionary=model.get_model_vocabulary())
 
-if not os.path.exists("../data/lda.model"):
+if not os.path.exists("../data/lda_model.state"):
     lda_explainer.search_lda(data_train, data_val)
-    lda_explainer.save("../data/lda.model")
+    lda_explainer.save("../data/lda_model.state")
 else:
-    lda_explainer.load("../data/lda.model")
+    lda_explainer.load("../data/lda_model")
 
 explainer = Explainer(data_test, model, lime_explainer, lda_explainer)
 
