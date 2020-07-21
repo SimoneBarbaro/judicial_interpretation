@@ -89,7 +89,9 @@ class LdaExplainer:
         self.lda.save(file)
 
     def load(self, file):
+        print(file)
         self.lda = gensim.models.ldamodel.LdaModel.load(file)
+        self.id2word = self.lda.id2word
 
     def get_lda_dataset(self, data):
         corpus = [self.id2word.doc2bow(doc) for doc in self.clean(data["opinion"])]
