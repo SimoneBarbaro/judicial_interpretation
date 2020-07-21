@@ -73,7 +73,7 @@ class LdaExplainer:
         lda_search = []
         coherences = []
         for t in range(min_topics, max_topics + 1):
-            lda = gensim.models.wrappers.LdaMallet("../mallet-2.0.8/bin/mallet",
+            lda = gensim.models.wrappers.LdaMallet("../../mallet-2.0.8/bin/mallet",
                                                    corpus=self.corpus,
                                                    id2word=self.id2word,
                                                    num_topics=t)
