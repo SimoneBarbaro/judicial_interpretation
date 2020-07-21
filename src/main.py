@@ -2,11 +2,8 @@ import os
 import pandas as pd
 
 from data_load import get_train_val_test_splits, get_data
-from simple_model import SimpleModel, get_ngrams
-from explain import LimeExplainer
-import gensim
-from gensim.models.ldamodel import LdaModel, CoherenceModel
-from gensim import corpora
+from simple_model import SimpleModel
+from explain import LimeExplainer, LdaExplainer, Explainer
 
 data = get_data()
 data_train, data_val_model, data_val_interpretation, data_test = get_train_val_test_splits(data)
@@ -15,36 +12,38 @@ model = SimpleModel(data_train, data_val_model)
 if not os.path.exists("../data/simple_model_fit.csv"):
     fit = model.fit()
     pd.DataFrame(fit).to_csv("../data/simple_model_fit.csv", index=False, header=True)
-fit = pd.read_csv("../data/simple_model_fit.csv")
-model.load(fit)
-print(pd.DataFrame(fit))
-print(model.evaluate(data_val_model))
+else:
+    fit = pd.read_csv("../data/simple_model_fit.csv")
+    model.load(fit)
 
-explainer = LimeExplainer()
+lime_explainer = LimeExplainer()
+"""
 if not os.path.exists("../data/lime_data.csv"):
-    lime_dataset = explainer.build_explanations(model.predict, data_val_interpretation)
+    lime_dataset = lime_explainer.build_explanations(model.predict, data_val_interpretation)
     lime_dataset.to_csv("../data/lime_data.csv", header=True, index=False)
 lime_dataset = pd.read_csv("../data/lime_data.csv")
-explainer.load(lime_dataset)
-print(explainer.get_word_importances())
+lime_explainer.load(lime_dataset)
+"""
+if not os.path.exists("../data/lime_data_test.csv"):
+    lime_dataset = lime_explainer.build_explanations(model.predict, data_test)
+    lime_dataset.to_csv("../data/lime_data_test.csv", header=True, index=False)
+else:
+    lime_dataset = pd.read_csv("../data/lime_data.csv")
+    lime_explainer.load(lime_dataset)
+lda_explainer = LdaExplainer(ngrams=model.get_model_max_ngrams(), dictionary=model.get_model_vocabulary())
 
-doc_clean = get_ngrams(data_train["opinion"], 4)
-doc_clean_val = get_ngrams(data_val["opinion"], 4)
-dictionary = corpora.Dictionary(doc_clean)
+if not os.path.exists("../data/lda.model"):
+    lda_explainer.search_lda(data_train, data_val)
+    lda_explainer.save("../data/lda.model")
+else:
+    lda_explainer.load("../data/lda.model")
 
-# creating the document-term matrix
-doc_term_matrix = [dictionary.doc2bow(doc) for doc in doc_clean]
+explainer = Explainer(data_test, model, lime_explainer, lda_explainer)
 
-lda_search = []
-coherences = []
-for t in range(10, 101, 10):
-    lda = gensim.models.wrappers.LdaMallet("../mallet-2.0.8/bin/mallet",
-                                           corpus=doc_term_matrix,
-                                           id2word=dictionary,
-                                           num_topics=t)
-    lda.save('../data/lda{}.model'.format(t))
-    lda_search.append(lda)
-    coherence_model = CoherenceModel(lda, texts=doc_clean_val, dictionary=dictionary, coherence='c_v')
-    coherence = coherence_model.get_coherence()
-    coherences.append(coherence)
-    print(coherence)
+good_importance, bad_importance = explainer.get_aggregated_topic_importance()
+
+print(good_importance)
+print(bad_importance)
+
+for doc, prediction, explanation in explainer.explain_iterator():
+    pass

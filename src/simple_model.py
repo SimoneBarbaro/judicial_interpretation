@@ -32,13 +32,20 @@ def tokenize_text(doc):
     return stemmed
 
 
+def tokenize_single(text):
+    text = text.replace('\r', ' ').replace('\n', ' ')
+    lower = text.lower()  # all lower case
+    nopunc = lower.translate(translator)  # remove punctuation
+    return stemmer.stem(nopunc) if not nopunc.isdigit() else '#'
+
+
 def get_ngrams(corpus, max_len, tokenizer_fn=tokenize_text):
     grams = []
     for i, d in enumerate(corpus):
         tokens = tokenizer_fn(d)
         grams.append([t for t in tokens])
         for n in range(2, max_len + 1):
-            grams[i] += ["_".join(gram) for gram in ngrams(tokens, n)]
+            grams[i] += [" ".join(gram) for gram in ngrams(tokens, n)]
     return grams
 
 
@@ -98,4 +105,12 @@ class SimpleModel:
         self.model.fit(self.train_X, self.train_y)
 
     def predict(self, documents):
+        if type(documents) == str:
+            return self.model.predict_proba([documents])
         return self.model.predict_proba(documents)
+
+    def get_model_vocabulary(self):
+        return self.model.named_steps["Vectorizer"].vocabulary_
+
+    def get_model_max_ngrams(self):
+        return self.model.get_params()["Vectorizer__ngram_range"][1]
