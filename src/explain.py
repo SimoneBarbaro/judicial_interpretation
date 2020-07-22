@@ -34,7 +34,8 @@ class LimeExplainer:
         self.lime_dataset = lime_dataset
 
     def get_word_importances(self):
-        importances = self.lime_dataset.set_index(["word", "doc"]).mean(level=0).sort_values("importance", ascending=False)
+        importances = self.lime_dataset.set_index(["word", "doc"]).mean(level=0).sort_values("importance",
+                                                                                             ascending=False)
         return importances
 
 
@@ -47,7 +48,6 @@ class LdaExplainer:
             self.num_words = len(self.dictionary)
         self.lda = None
         self.id2word = None
-        self.corpus = None
 
     def clean(self, data):
         doc_clean = get_ngrams(data, self.ngrams)
@@ -63,18 +63,19 @@ class LdaExplainer:
 
         return cleaned_doc
 
+    def get_corpus(self, data):
+        return [self.id2word.doc2bow(doc) for doc in self.clean(data["opinion"])]
+
     def search_lda(self, data_train, data_val, min_topics=5, max_topics=20):
         doc_train = self.clean(data_train["opinion"])
         doc_val = self.clean(data_val["opinion"])
         self.id2word = corpora.Dictionary(doc_train)
-
-        # creating the document-term matrix
-        self.corpus = [self.id2word.doc2bow(doc) for doc in doc_train]
+        train_corpus = self.get_corpus(data_train)
         lda_search = []
         coherences = []
         for t in range(min_topics, max_topics + 1):
             lda = gensim.models.wrappers.LdaMallet("../../mallet-2.0.8/bin/mallet",
-                                                   corpus=self.corpus,
+                                                   corpus=train_corpus,
                                                    id2word=self.id2word,
                                                    num_topics=t)
             lda_search.append(lda)
@@ -85,16 +86,18 @@ class LdaExplainer:
 
         return lda_search, coherences
 
-    def save(self, file):
-        self.lda.save(file)
-
-    def load(self, file):
-        print(file)
-        self.lda = gensim.models.ldamodel.LdaModel.load(file)
-        self.id2word = self.lda.id2word
+    def load_config(self, file, data_train):
+        doc_train = self.clean(data_train["opinion"])
+        self.id2word = corpora.Dictionary(doc_train)
+        with open(file) as f:
+            num_topics = f.read()
+            self.lda = gensim.models.wrappers.LdaMallet("../../mallet-2.0.8/bin/mallet",
+                                                        corpus=self.get_corpus(data_train),
+                                                        id2word=self.id2word,
+                                                        num_topics=num_topics)
 
     def get_lda_dataset(self, data):
-        corpus = [self.id2word.doc2bow(doc) for doc in self.clean(data["opinion"])]
+        corpus = self.get_corpus(data)
 
         id = []
         words = []
@@ -112,7 +115,8 @@ class LdaExplainer:
                     topics.append(topic_num)
                     topic_props.append(prop_topic)
                     word_props.append(prop)
-        return pd.DataFrame(data={"doc": id, "word": words, "topic": topics, "topic_prop": topic_props, "word_prop": word_props})
+        return pd.DataFrame(
+            data={"doc": id, "word": words, "topic": topics, "topic_prop": topic_props, "word_prop": word_props})
 
 
 class Explainer:
@@ -132,7 +136,8 @@ class Explainer:
 
     def explain_iterator(self):
         for doc in np.unique(self.lime_dataset["doc"]):
-            yield self.data.iloc[doc], np.argmax(self.model.predict(self.data.iloc[doc]["opinion"])), self.explain_document(doc)
+            yield self.data.iloc[doc], np.argmax(
+                self.model.predict(self.data.iloc[doc]["opinion"])), self.explain_document(doc)
 
     def get_aggregated_topic_importance(self):
         correct_topic_importance = []

@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 
 from data_load import get_train_val_test_splits, get_data
 from simple_model import SimpleModel
@@ -32,11 +33,14 @@ else:
     lime_explainer.load(lime_dataset)
 lda_explainer = LdaExplainer(ngrams=model.get_model_max_ngrams(), dictionary=model.get_model_vocabulary())
 
-if not os.path.exists("../data/lda_model.state"):
-    lda_explainer.search_lda(data_train, data_val)
-    lda_explainer.save("../data/lda_model.state")
+if not os.path.exists("../data/lda_search_result.txt"):
+    min_topics = 5
+    max_topics = 20
+    _, coherences = lda_explainer.search_lda(data_train, data_val, min_topics, max_topics)
+    with open("../data/lda_search_result.txt", "w") as f:
+        f.write(np.argmax(coherences) + min_topics)
 else:
-    lda_explainer.load("../data/lda_model")
+    lda_explainer.load_config("../data/lda_search_result.txt", data_train)
 
 explainer = Explainer(data_test, model, lime_explainer, lda_explainer)
 
