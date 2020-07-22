@@ -90,7 +90,7 @@ class LdaExplainer:
         doc_train = self.clean(data_train["opinion"])
         self.id2word = corpora.Dictionary(doc_train)
         with open(file) as f:
-            num_topics = f.read()
+            num_topics = int(f.read())
             self.lda = gensim.models.wrappers.LdaMallet("../../mallet-2.0.8/bin/mallet",
                                                         corpus=self.get_corpus(data_train),
                                                         id2word=self.id2word,

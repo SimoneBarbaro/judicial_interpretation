@@ -38,7 +38,7 @@ if not os.path.exists("../data/lda_search_result.txt"):
     max_topics = 20
     _, coherences = lda_explainer.search_lda(data_train, data_val, min_topics, max_topics)
     with open("../data/lda_search_result.txt", "w") as f:
-        f.write(np.argmax(coherences) + min_topics)
+        f.write(str(np.argmax(coherences) + min_topics))
 else:
     lda_explainer.load_config("../data/lda_search_result.txt", data_train)
 
