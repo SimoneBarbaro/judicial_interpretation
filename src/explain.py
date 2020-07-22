@@ -123,7 +123,7 @@ class Explainer:
         self.model = model
 
     def explain_document(self, doc):
-        topic_scores = np.zeros_like(self.lda_dataset["topic"].drop_duplicates())
+        topic_scores = np.zeros_like(self.lda_dataset["topic"].drop_duplicates(), dtype=np.float)
         for word, row in self.lime_dataset.loc[doc].iterrows():
             if (doc, tokenize_single(word)) in self.lda_dataset.index:
                 best_fit = self.lda_dataset.loc[(doc, tokenize_single(word))].sort_values("word_prop").head(1)
