@@ -13,7 +13,7 @@ from xgboost import XGBClassifier
 
 
 nlp = spacy.load('en_core_web_sm')
-bad_words = ["affirmed", "affirm", "reversed", "reverse"]
+bad_words = ["affirmed", "affirm", "reversed", "reverse", "remanded", "remand"]
 nltk.download('stopwords')
 translator = str.maketrans('', '', punctuation)
 stoplist = set(stopwords.words('english'))
@@ -74,7 +74,7 @@ class SimpleModel:
         self.val_X = val_dataset["opinion"]
         self.val_y = val_dataset["outcome"]
         split = PredefinedSplit(np.concatenate((np.repeat(-1, len(self.train_y)), np.repeat(0, len(self.val_y)))))
-        self.search = GridSearchCV(self.model, self.search_parameters, cv=split, scoring="f1_micro")
+        self.search = GridSearchCV(self.model, self.search_parameters, cv=split, scoring="f1_micro", n_jobs=4)
 
     def fit(self):
         X = np.concatenate((self.train_X, self.val_X))

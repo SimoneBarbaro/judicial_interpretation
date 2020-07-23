@@ -6,6 +6,7 @@ from gensim import corpora
 from gensim.models.ldamodel import LdaModel, CoherenceModel
 
 from simple_model import get_ngrams, tokenize_text, tokenize_single
+from sklearn.metrics import accuracy_score
 
 
 class LimeExplainer:
@@ -19,15 +20,21 @@ class LimeExplainer:
         id = []
         keys = []
         scores = []
-        for i, d in enumerate(data["opinion"]):
-            ex = self.explainer.explain_instance(d, model_predict_fn)
-            self.exps.append(ex)
+        self.exps = data["opinion"].apply(self.explainer.explain_instance,
+                                          classifier_fn=model_predict_fn)
+        lime_pred = self.exps.apply(lambda e: np.argmax(e.predict_proba)).values
+        print(accuracy_score(np.argmax(model_predict_fn(data["opinion"]), axis=-1), lime_pred))
+        for i, ex in enumerate(self.exps):
+        #for i, d in enumerate(data["opinion"]):
+            #ex = self.explainer.explain_instance(d, model_predict_fn)
+            #self.exps.append(ex)
             for word, score in ex.as_list():
                 id.append(i)
                 keys.append(word)
                 scores.append(score)
         self.lime_dataset = pd.DataFrame(data={"doc": id, "word": keys, "score": scores})
         self.lime_dataset["importance"] = self.lime_dataset["score"].apply(lambda x: abs(x))
+
         return self.lime_dataset
 
     def load(self, lime_dataset):
@@ -121,8 +128,8 @@ class LdaExplainer:
 
 class Explainer:
     def __init__(self, data, model, lime_explainer: LimeExplainer, lda_explainer: LdaExplainer):
-        self.lime_dataset = lime_explainer.lime_dataset.set_index(["doc", "word"])
-        self.lda_dataset = lda_explainer.get_lda_dataset(data).set_index(["doc", "word"])
+        self.lime_dataset = lime_explainer.lime_dataset.set_index(["doc", "word"]).sort_index()
+        self.lda_dataset = lda_explainer.get_lda_dataset(data).set_index(["doc", "word"]).sort_index()
         self.data = data
         self.model = model
 
@@ -135,7 +142,7 @@ class Explainer:
         return topic_scores / np.sum(topic_scores)
 
     def explain_iterator(self):
-        for doc in np.unique(self.lime_dataset["doc"]):
+        for doc in self.lda_dataset["topic"].drop_duplicates():
             yield self.data.iloc[doc], np.argmax(
                 self.model.predict(self.data.iloc[doc]["opinion"])), self.explain_document(doc)
 

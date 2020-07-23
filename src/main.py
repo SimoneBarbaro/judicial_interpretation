@@ -16,21 +16,24 @@ if not os.path.exists("../data/simple_model_fit.csv"):
 else:
     fit = pd.read_csv("../data/simple_model_fit.csv")
     model.load(fit)
+print(model.evaluate(data_val_model))
 
 lime_explainer = LimeExplainer()
-"""
-if not os.path.exists("../data/lime_data.csv"):
+
+if not os.path.exists("../data/lime_data_val.csv"):
     lime_dataset = lime_explainer.build_explanations(model.predict, data_val_interpretation)
-    lime_dataset.to_csv("../data/lime_data.csv", header=True, index=False)
-lime_dataset = pd.read_csv("../data/lime_data.csv")
-lime_explainer.load(lime_dataset)
-"""
+    lime_dataset.to_csv("../data/lime_data_val.csv", header=True, index=False)
+else:
+    lime_dataset = pd.read_csv("../data/lime_data_val.csv")
+    lime_explainer.load(lime_dataset)
+
 if not os.path.exists("../data/lime_data_test.csv"):
     lime_dataset = lime_explainer.build_explanations(model.predict, data_test)
     lime_dataset.to_csv("../data/lime_data_test.csv", header=True, index=False)
 else:
-    lime_dataset = pd.read_csv("../data/lime_data.csv")
+    lime_dataset = pd.read_csv("../data/lime_data_test.csv")
     lime_explainer.load(lime_dataset)
+
 lda_explainer = LdaExplainer(ngrams=model.get_model_max_ngrams(), dictionary=model.get_model_vocabulary())
 
 if not os.path.exists("../data/lda_search_result.txt"):
