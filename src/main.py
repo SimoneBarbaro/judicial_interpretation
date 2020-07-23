@@ -17,6 +17,11 @@ else:
     fit = pd.read_csv("../data/simple_model_fit.csv")
     model.load(fit)
 print(model.evaluate(data_val_model))
+print(model.evaluate(data_test))
+from sklearn.metrics import confusion_matrix
+
+print(confusion_matrix(data_test["outcome"].values, np.argmax(model.predict(data_test["opinion"]), axis=1)))
+
 
 lime_explainer = LimeExplainer()
 
