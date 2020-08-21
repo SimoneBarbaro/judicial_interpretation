@@ -1,5 +1,5 @@
 # Judicial Interpretation
-
+Replication code for my project in sequencing legal DNA. The code is also available at https://github.com/SimoneBarbaro/judicial_interpretation
 ## Usage
 
 Before starting the programs, the requirements in requirements.txt must be satisfied. 
