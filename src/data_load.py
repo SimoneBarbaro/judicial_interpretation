@@ -4,9 +4,13 @@ from sklearn.model_selection import train_test_split
 import utils
 
 
-def get_data():
-    data = pd.read_csv("../data/sc_opinions_meta_00_11_case_level.csv", sep="|").drop(columns="Unnamed: 0")
-    data["outcome"] = data["caseDisposition"].apply(lambda x: utils.OUTCOME_DICT.get(x, np.nan))
+def get_data(data_path, is_new_data):
+    if is_new_data:
+        data = pd.read_csv(data_path)
+        data = data[data["outcome"] != -1]
+    else:
+        data = pd.read_csv(data_path, sep="|").drop(columns="Unnamed: 0")
+        data["outcome"] = data["caseDisposition"].apply(lambda x: utils.OUTCOME_DICT.get(x, np.nan))
     return data[["opinion", "outcome"]].dropna()
 
 

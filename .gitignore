@@ -1,4 +1,5 @@
-data/sc_opinions*
+data/
+results/
 mallet-2.0.8/
 # Byte-compiled / optimized / DLL files
 __pycache__/

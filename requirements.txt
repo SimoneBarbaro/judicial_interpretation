@@ -1,0 +1,13 @@
+numpy==1.18.1
+nltk
+spacy
+xgboost
+sklearn
+tensorflow_hub==0.6.0
+tensorflow==2.0.0
+lime
+keras-tuner
+pyLDAvis
+transformers
+gensim
+wordcloud

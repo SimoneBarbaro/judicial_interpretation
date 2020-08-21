@@ -10,6 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV, PredefinedSplit
 from sklearn.metrics import f1_score, make_scorer
 from xgboost import XGBClassifier
+import utils
 
 
 nlp = spacy.load('en_core_web_sm')
@@ -61,7 +62,7 @@ class SimpleModel:
 
         self.model = Pipeline([
             ("Vectorizer", tfidf),
-            ("model", XGBClassifier())
+            ("model", XGBClassifier(seed=utils.RANDOM_SEED))
         ])
         self.search_parameters = {
             "Vectorizer__min_df": [0, 0.05, 0.1],
@@ -74,7 +75,9 @@ class SimpleModel:
         self.val_X = val_dataset["opinion"]
         self.val_y = val_dataset["outcome"]
         split = PredefinedSplit(np.concatenate((np.repeat(-1, len(self.train_y)), np.repeat(0, len(self.val_y)))))
-        self.search = GridSearchCV(self.model, self.search_parameters, cv=split, scoring="f1", n_jobs=4)
+        self.search = GridSearchCV(self.model, self.search_parameters, cv=split, scoring="f1",
+                                   verbose=2, n_jobs=4
+                                   )
 
     def fit(self):
         X = np.concatenate((self.train_X, self.val_X))

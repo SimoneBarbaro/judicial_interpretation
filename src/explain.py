@@ -5,8 +5,9 @@ import gensim
 from gensim import corpora
 from gensim.models.ldamodel import LdaModel, CoherenceModel
 
-from simple_model import get_ngrams, tokenize_text, tokenize_single
+from simple_model import get_ngrams, tokenize_single
 from sklearn.metrics import accuracy_score
+import utils
 
 
 class LimeExplainer:
@@ -23,11 +24,9 @@ class LimeExplainer:
         self.exps = data["opinion"].apply(self.explainer.explain_instance,
                                           classifier_fn=model_predict_fn)
         lime_pred = self.exps.apply(lambda e: np.argmax(e.predict_proba)).values
+        print("lime accuracy to model:")
         print(accuracy_score(np.argmax(model_predict_fn(data["opinion"]), axis=-1), lime_pred))
         for i, ex in enumerate(self.exps):
-        #for i, d in enumerate(data["opinion"]):
-            #ex = self.explainer.explain_instance(d, model_predict_fn)
-            #self.exps.append(ex)
             for word, score in ex.as_list():
                 id.append(i)
                 keys.append(word)
@@ -84,7 +83,8 @@ class LdaExplainer:
             lda = gensim.models.wrappers.LdaMallet("../../mallet-2.0.8/bin/mallet",
                                                    corpus=train_corpus,
                                                    id2word=self.id2word,
-                                                   num_topics=t)
+                                                   num_topics=t,
+                                                   random_seed=utils.RANDOM_SEED)
             lda_search.append(lda)
             coherence_model = CoherenceModel(lda, texts=doc_val, dictionary=self.id2word, coherence='c_v')
             coherence = coherence_model.get_coherence()
@@ -101,7 +101,8 @@ class LdaExplainer:
             self.lda = gensim.models.wrappers.LdaMallet("../../mallet-2.0.8/bin/mallet",
                                                         corpus=self.get_corpus(data_train),
                                                         id2word=self.id2word,
-                                                        num_topics=num_topics)
+                                                        num_topics=num_topics,
+                                                        random_seed=utils.RANDOM_SEED)
 
     def get_lda_dataset(self, data):
         corpus = self.get_corpus(data)
