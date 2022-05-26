@@ -4,7 +4,7 @@ spacy
 xgboost
 sklearn
 tensorflow_hub==0.6.0
-tensorflow==2.0.3
+tensorflow==2.7.2
 lime
 keras-tuner
 pyLDAvis
